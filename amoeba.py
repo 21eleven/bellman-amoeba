@@ -1,10 +1,6 @@
 from __future__ import print_function
 import numpy as np
 import copy
-from transition_matrix import build_transition_matrix as tm
-#import transition_matrix 
-
-#TM  = transition_matrix.matrix()
 
 
 class amoeba():
@@ -65,21 +61,18 @@ class amoeba():
                     except IndexError:
                         s_prime[one_d_project((r,c))] += 0.8
                 elif a == 2:
-                    try:
-                        self.environ[r-1][c]
-                        s_prime[one_d_project((r-1,c))] += 0.8
-                        try:
-                            self.environ[r][c+1]
-                            s_prime[one_d_project((r,c+1))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                        try:
-                            self.environ[r][c-1]
-                            s_prime[one_d_project((r,c-1))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                    except IndexError:
+                    if r+1 < self.r and [r+1,c] not in self.obstacles:
+                        s_prime[one_d_project((r+1,c))] += 0.8
+                    else:
                         s_prime[one_d_project((r,c))] += 0.8
+                    if c+1 < self.c and [r,c+1] not in self.obstacles:
+                        s_prime[one_d_project((r,c+1))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
+                    if c-1 >= 0 and [r,c-1] not in self.obstacles:
+                        s_prime[one_d_project((r,c-1))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
                 elif a == 3:
                     if c+1 < self.c and [r,c+1] not in self.obstacles:
                         s_prime[one_d_project((r,c+1))] += 0.8
@@ -118,7 +111,8 @@ class amoeba():
         else:   
             self.location = place_amoeba()
         self.t = build_transition_matrix()
-        print(self.t[:,:,3])
+        print(self.t[:,:,2])
+
     def print_environ(self):
         border = ''.join(["-" for i in range((4*self.environ.shape[1])+1)])
         print(border)
