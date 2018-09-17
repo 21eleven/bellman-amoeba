@@ -45,6 +45,7 @@ class amoeba():
                     except IndexError:
                         s_prime[one_d_project((r,c))] += 0.8
                 elif a == 1:
+                    #test
                     try:
                         self.environ[r][c-1]
                         s_prime[one_d_project((r,c-1))] += 0.8
