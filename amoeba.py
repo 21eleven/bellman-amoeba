@@ -29,38 +29,31 @@ class amoeba():
                 if [r,c] in self.foods + self.obstacles + self.poisons:
                     return s_prime
                 if a == 0:
-                    try:
-                        self.environ[r+1][c]
-                        s_prime[one_d_project((r+1,c))] += 0.8
-                        try:
-                            self.environ[r][c+1]
-                            s_prime[one_d_project((r,c+1))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                        try:
-                            self.environ[r][c-1]
-                            s_prime[one_d_project((r,c-1))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                    except IndexError:
+                    if r-1 >= 0 and [r-1,c] not in self.obstacles:
+                        s_prime[one_d_project((r-1,c))] += 0.8
+                    else:
                         s_prime[one_d_project((r,c))] += 0.8
+                    if c+1 < self.c and [r,c+1] not in self.obstacles:
+                        s_prime[one_d_project((r,c+1))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
+                    if c-1 >= 0 and [r,c-1] not in self.obstacles:
+                        s_prime[one_d_project((r,c-1))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
                 elif a == 1:
-                    #test
-                    try:
-                        self.environ[r][c-1]
+                    if c-1 >= 0 and [r,c-1] not in self.obstacles:
                         s_prime[one_d_project((r,c-1))] += 0.8
-                        try:
-                            self.environ[r+1][c]
-                            s_prime[one_d_project((r+1,c))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                        try:
-                            self.environ[r-1][c]
-                            s_prime[one_d_project((r-1,c))] += 0.1
-                        except IndexError:
-                            s_prime[one_d_project((r,c))] += 0.1
-                    except IndexError:
+                    else:
                         s_prime[one_d_project((r,c))] += 0.8
+                    if r+1 < self.r and [r+1,c] not in self.obstacles:
+                        s_prime[one_d_project((r+1,c))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
+                    if r-1 >= 0 and [r-1,c] not in self.obstacles:
+                        s_prime[one_d_project((r-1,c))] += 0.1
+                    else:
+                        s_prime[one_d_project((r,c))] += 0.1
                 elif a == 2:
                     if r+1 < self.r and [r+1,c] not in self.obstacles:
                         s_prime[one_d_project((r+1,c))] += 0.8
@@ -112,7 +105,10 @@ class amoeba():
         else:   
             self.location = place_amoeba()
         self.t = build_transition_matrix()
-        print(self.t[:,:,2])
+        print(self.t[:,:,0])
+
+    def return_transition_matrix(self):
+        return self.t
 
     def print_environ(self):
         border = ''.join(["-" for i in range((4*self.environ.shape[1])+1)])
@@ -140,6 +136,7 @@ class amoeba():
                     row_string += ['   |']
             print(''.join(row_string))
             print(border)
+
     def move_south(self):
         limits = self.environ.shape
         if self.location[0] + 1 != limits[0]:
@@ -164,6 +161,8 @@ if __name__ == "__main__":
     np.random.seed(2111)
     #amoeba = amoeba()
     #amoeba(environment_size=(3,4), foods=1, obstacles=1, poisons=1).print_environ()
-    amoeba(environment_size=(3,4), demo=True).print_environ()
+    a = amoeba(environment_size=(3,4), demo=True)
+    a.print_environ()
+
 
 
