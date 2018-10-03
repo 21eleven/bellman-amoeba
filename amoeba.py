@@ -5,6 +5,14 @@ import copy
 
 class amoeba():
     def __init__(self, environment_size=(8,8), foods=1, obstacles=1, poisons=1, demo=False):
+	def place_object():
+            while True:
+                row = np.random.randint(0,environment_size[0])
+                col = np.random.randint(0,environment_size[1])
+                if [row,col] not in self.foods + self.obstacles + self.poisons:
+                    break 
+            return [row,col]
+
         def place_food():
             row = np.random.randint(0,environment_size[0])
             col = np.random.randint(0,environment_size[1])
@@ -92,6 +100,16 @@ class amoeba():
                     one_d_pt += 1
             return T
 
+        def build_reward_matrix(normal_state_value=-0.04):
+            env_vec = np.array([normal_state_value for i in range(self.len)])
+            for food in self.foods:
+                env_vec[one_d_project(food)] = 1.0
+            for poison in self.poisons:
+                env_vec[one_d_project(poison)] = -1.0
+            for obstacle in self.obstacles:
+                env_vec[one_d_project(obstacle)] = .0
+            return env_vec    
+
 
         self.environ = np.zeros(environment_size)
         self.len = environment_size[0]*environment_size[1]
@@ -103,12 +121,85 @@ class amoeba():
             self.poisons = [[1,3]]
             self.location = [2,0]
         else:   
-            self.location = place_amoeba()
+            self.foods = []
+            self.obstacles = []
+            self.poisons = []
+            self.location = place_object()
+            for f in range(foods):
+                self.foods.append(place_object())
+            for o in range(obstacles):
+                self.obstacles.append(place_object())
+            for p in range(poisons):
+                pt = place_object()
+                self.poisons.append(pt)
         self.t = build_transition_matrix()
+        print(self.environ)
+        self.reward_matrix = build_reward_matrix()
+
         print(self.t[:,:,0])
 
     def return_transition_matrix(self):
         return self.t
+
+
+    def return_value_matrix(self, state, utility_vec, reward, gamma):
+        # array to store that utility generated for each possible action given the state
+        action_utility_array = np.zeros(4)
+        for act in range(4):
+            # dot the state with the transition matrix given the action
+            # basic if we have this state, and this action what are the probabilities
+            # that our amoeba will end up in any of the next states in the environment
+            # the transtition matrix already has this info in it
+            # we are just filtering down the transition matrix 
+            # using this dot product operation
+            #print("state:\n",state)
+            #print("t matrix:\n",self.t[:,:,act])
+            lookup_result = np.dot(state, self.t[:,:,act])
+            #print("lookup:\n", lookup_result)
+            
+            # once we have model of the outcome of an action given a state
+            # then rate the value of those outcomes probabilities
+            # by bouncing the utility vector off the outcome probs
+            # this utility vector is something we are iteratively updating
+            # in the value iteration algorithm
+
+            #print("utility:\n", utility_vec)
+            action_utility = np.sum(np.multiply(utility_vec, lookup_result))
+            # bounce to lookup results aka the position where you up probabilities
+            # off the vector that holds the utilities for positions in that environment
+            action_utility_array[act] = action_utility
+            
+        return reward + gamma * np.max(action_utility_array)
+
+    def value_iter_env(self, n, gamma=0.999, epsilon=0.01):
+        c = 0
+        g_list = []
+        
+        #utility vectors
+        u = np.zeros(self.len)
+        u_prime = np.zeros(self.len)
+        
+        # value iteration loop
+        while True:
+            delta = 0
+            u = u_prime.copy()
+            c += 1
+            g_list.append(u)
+            for state in range(self.len):
+                reward = self.reward_matrix[state]
+                v = np.zeros((1,self.len))
+                v[0,state] = 1.0
+                u_prime[state] = self.return_value_matrix(v, u, reward, gamma)
+                delta = max(delta, np.abs(u_prime[state] - u[state])) # stopping criteria
+            if delta < epsilon * (1 - gamma) / gamma:
+                print("Iterations: {}".format(n)) 
+                print("Delta: {}".format(delta)) 
+                print("Gamma: {}".format(gamma)) 
+                print("Epsilon: {}".format(epsilon)) 
+		print(u.reshape(self.environ.shape))
+                self.policy = u
+                break
+            
 
     def print_environ(self):
         border = ''.join(["-" for i in range((4*self.environ.shape[1])+1)])
@@ -158,11 +249,18 @@ class amoeba():
             self.location[1] -= 1
 
 if __name__ == "__main__":
-    np.random.seed(2111)
+    #np.random.seed(2111)
     #amoeba = amoeba()
     #amoeba(environment_size=(3,4), foods=1, obstacles=1, poisons=1).print_environ()
     a = amoeba(environment_size=(3,4), demo=True)
+    #a = amoeba(environment_size=(3,4))
+    #a = amoeba(environment_size=(10,10))
     a.print_environ()
+    print(a.reward_matrix)
+    print(a.reward_matrix.reshape(a.environ.shape))
+    a.value_iter_env(50)
+    a.value_iter_env(9, gamma=0.5, epsilon=0.001)
+    
 
 
 
